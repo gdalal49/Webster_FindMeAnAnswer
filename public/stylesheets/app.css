@@ -1,0 +1,11 @@
+/* body {
+  background-color: rgb(34, 34, 34);
+  color: antiquewhite; 
+} */
+img {
+  height: 200px;
+  width: 100%;
+}
+.right_allign{
+  text-align-last: right;
+}
