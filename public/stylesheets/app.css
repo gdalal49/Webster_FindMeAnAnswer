@@ -9,3 +9,6 @@ img {
 .right_allign{
   text-align-last: right;
 }
+.deleteForm{
+  display: inline;
+}

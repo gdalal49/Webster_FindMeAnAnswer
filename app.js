@@ -3,7 +3,8 @@ const express = require("express"),
     bodyParser = require("body-parser"),
     mongoose = require("mongoose"),
     passport = require('passport'),
-    LocalStrategy = require('passport-local');
+    LocalStrategy = require('passport-local'),
+    methodOverride = require("method-override");
 
 // Requiring Schemas
 const Question = require("./models/questions"),
@@ -19,6 +20,7 @@ mongoose.connect('mongodb://localhost:27017/find-answers', {
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 //Passport Configuration
 app.use(require("express-session")({
     secret: "Best course on web devlopment by Colt Steele",
@@ -88,7 +90,7 @@ app.post("/khojo", isLoggedIn, function (req, res) {
 });
 
 //SHOW - Show Particular Question with All its detail - GET
-app.get("/khojo/:id", isLoggedIn, function (req, res) {
+app.get("/khojo/:id", function (req, res) {
     Question.findById(req.params.id).populate("comments").exec(function (err, foundQuestion) {
         if (err) {
             console.log(err);
@@ -96,7 +98,36 @@ app.get("/khojo/:id", isLoggedIn, function (req, res) {
             res.render("questions/show", { question: foundQuestion });
         }
     });
-})
+});
+
+//EDIT - Edit particular question - GET
+app.get("/khojo/:id/edit", checkQuestionOwnership, function (req, res) {
+    Question.findById(req.params.id, function (err, foundQuestion) {
+        res.render("khojo/edit", { question: foundQuestion });
+    });
+});
+
+//UPDATE - Updates the question - PUT
+app.put("/khojo/:id", checkQuestionOwnership, function (req, res) {
+    Question.findByIdAndUpdate(req.params.id, req.body.question, function (err, updatedQuestion) {
+        if (err) {
+            res.redirect("/khojo");
+        } else {
+            res.redirect("/khojo/" + req.params.id);
+        }
+    });
+});
+
+//DESTROY - Deletes question - DELETE
+app.delete("/khojo/:id", checkQuestionOwnership, function (req, res) {
+    Question.findByIdAndRemove(req.params.id, function (err) {
+        if (err) {
+            res.redirect("/khojo");
+        } else {
+            res.redirect("/khojo");
+        }
+    });
+});
 
 //=========================
 //COMMENTS ROUTE
@@ -138,10 +169,42 @@ app.post("/khojo/:id/comments", isLoggedIn, function (req, res) {
     });
 });
 
+//EDIT - comment - GET ROUTE
+app.get("/khojo/:id/comments/:comment_id/edit", checkCommentOwnership, function (req, res) {
+    Comment.findById(req.params.comment_id, function (err, foundComment) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.render("comments/edit", { question_id: req.params.id, comment: foundComment });
+        }
+    });
+});
+
+//UPDATE - comment - PUT ROUTE
+app.put("/khojo/:id/comments/:comment_id", checkCommentOwnership, function (req, res) {
+    Comment.findByIdAndUpdate(req.params.comment_id, req.body.comment, function (err, updatedComment) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.redirect("/khojo/" + req.params.id);
+        }
+    });
+});
+
+//DESTROY - comment - DELETE ROUTE
+app.delete("/khojo/:id/comments/:comment_id", checkCommentOwnership, function (req, res) {
+    Comment.findByIdAndRemove(req.params.comment_id, function (err) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.redirect("/khojo/" + req.params.id);
+        }
+    });
+});
+
 //===================
 //AUTH ROUTES
 //===================
-
 //SIGN UP - Form
 app.get("/signup", function (req, res) {
     res.render("user/signup")
@@ -152,12 +215,10 @@ app.post("/signup", function (req, res) {
     const newUser = new User({ username: req.body.username });
     User.register(newUser, req.body.password, function (err, user) {
         if (err) {
-            console.log(err);
             return res.redirect("/signup");
         }
         passport.authenticate("local")(req, res, function () {
-            console.log(user);
-            res.redirect("/khojo")
+            res.redirect("/khojo");
         })
     });
 });
@@ -181,6 +242,7 @@ app.get("/signout", function (req, res) {
     res.redirect("/");
 });
 
+//Middleware
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
@@ -188,16 +250,56 @@ function isLoggedIn(req, res, next) {
     res.redirect("/signin");
 }
 
+function checkQuestionOwnership(req, res, next) {
+    // is user logged in
+    if (req.isAuthenticated()) {
+        Question.findById(req.params.id, function (err, foundQuestion) {
+            if (err) {
+                res.redirect("back");
+            }
+            else {
+                if (foundQuestion.author.id.equals(req.user._id)) {
+                    next();
+                } else {
+                    res.redirect("back");
+                }
+            }
+        });
+    } else {
+        res.redirect("back");
+    }
+}
+
+function checkCommentOwnership(req, res, next) {
+    // is user logged in
+    if (req.isAuthenticated()) {
+        Comment.findById(req.params.comment_id, function (err, foundComment) {
+            if (err) {
+                res.redirect("back");
+            }
+            else {
+                if (foundComment.author.id.equals(req.user._id)) {
+                    next();
+                } else {
+                    res.redirect("back");
+                }
+            }
+        });
+    } else {
+        res.redirect("back");
+    }
+}
+
+
 //===================
 // EXTRA ROUTES
 //===================
-
-app.get("/khojo/subjects", function (req, res) {
-    res.render("subjects/subjects");
-});
-app.get("/khojo/teachers", function (req, res) {
-    res.render("teachers/teachers");
-});
+// app.get("/khojo/subjects", function (req, res) {
+//     res.render("subjects/subjects");
+// });
+// app.get("/khojo/teachers", function (req, res) {
+//     res.render("teachers/teachers");
+// });
 
 
 //===================

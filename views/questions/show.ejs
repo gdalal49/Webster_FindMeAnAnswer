@@ -19,6 +19,12 @@
           <span class="glyphicon glyphicon-thumbs-up"></span> <%= question.upVotes %>
           <span class="glyphicon glyphicon-thumbs-down"></span> <%= question.downVotes %>
         </div>
+        <% if(currentUser && question.author.id.equals(currentUser._id)){ %>
+        <a class="btn btn-warning" href="/khojo/<%= question._id %>/edit">Edit</a>
+        <form action="/khojo/<%= question._id %>?_method=DELETE" method="POST" class="deleteForm">
+          <button class="btn btn-danger">Delete</button>
+        </form>
+        <% } %>
       </div>
     </div>
     <div class="well">
@@ -32,6 +38,13 @@
           <%= comment.author.username %>
           <span class="pull-right">10 days ago</span>
           <p><%= comment.text %></p>
+          <% if(currentUser && comment.author.id.equals(currentUser._id)){ %>
+          <a class="btn btn-xs btn-warning" href="/khojo/<%= question._id %>/comments/<%= comment._id %>/edit">Edit</a>
+          <form action="/khojo/<%= question._id %>/comments/<%= comment._id %>?_method=DELETE" method="POST"
+            class="deleteForm">
+            <button class="btn btn-xs btn-danger">Delete</button>
+          </form>
+          <% } %>
         </div>
       </div>
       <hr>
@@ -40,23 +53,3 @@
   </div>
 </div>
 <%- include("../partials/footer") %>
-
-<!-- .toDateString() -->
-
-<!-- <div class="ui comments">
-          <div class="comment">
-            <div class="content">
-              <a class="author">Stevie Feliciano</a>
-              <div class="metadata">
-                <div class="date">2 days ago</div>
-                <div class="rating">
-                  <i class="star icon"></i>
-                  5 Faves
-                </div>
-              </div>
-              <div class="text">
-                Hey guys, I hope this example comment is helping you read this documentation.
-              </div>
-            </div>
-          </div>
-        </div> -->
