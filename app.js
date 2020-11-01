@@ -9,6 +9,7 @@ const express = require("express"),
 // Requiring Schemas
 const Question = require("./models/questions"),
     Comment = require("./models/comments"),
+    Answer = require("./models/answer"),
     User = require("./models/user");
 
 //APP CONFIG
@@ -21,6 +22,7 @@ app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
+app.locals.moment = require('moment');
 //Passport Configuration
 app.use(require("express-session")({
     secret: "Best course on web devlopment by Colt Steele",
@@ -203,6 +205,45 @@ app.delete("/khojo/:id/comments/:comment_id", checkCommentOwnership, function (r
 });
 
 //===================
+// Answer Routes
+//===================
+//NEW - Open The Answer Form - GET
+app.get("/khojo/:id/answer/new", function (req, res) {
+    Question.findById(req.params.id, function (err, question) {
+        if (err) {
+            console.log(err);
+        } else {
+            res.render("answer/new", { question: question });
+        }
+    });
+});
+//CREATE - Creating a comment
+app.post("/khojo/:id/answer", isLoggedIn, function (req, res) {
+    Question.findById(req.params.id, function (err, question) {
+        if (err) {
+            console.log(err);
+            res.redirect("/khojo");
+        } else {
+            Answer.create(req.body.answer, function (err, answer) {
+                if (err) {
+                    console.log(err);
+                    res.redirect('/khojo/' + question._id + '/answer/new');
+                } else {
+                    // Add username and id to Answer
+                    answer.author.id = req.user._id;
+                    answer.author.username = req.user.username;
+                    // Save Answer
+                    answer.save();
+                    question.answer.push(answer);
+                    question.save();
+                    res.redirect('/khojo/' + question._id);
+                }
+            });
+        }
+    });
+});
+
+//===================
 //AUTH ROUTES
 //===================
 //SIGN UP - Form
@@ -213,6 +254,9 @@ app.get("/signup", function (req, res) {
 //SIGN UP - Logic
 app.post("/signup", function (req, res) {
     const newUser = new User({ username: req.body.username });
+    if (req.body.isTeacher === "true") {
+        newUser.isTeacher = true;
+    }
     User.register(newUser, req.body.password, function (err, user) {
         if (err) {
             return res.redirect("/signup");
