@@ -9,13 +9,12 @@ var QuestionSchema = new mongoose.Schema({
         },
         username: String
     },
-    answer: {
-        id: {
+    answer: [
+        {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Answer"
-        },
-        answer: String
-    },
+        }
+    ],
     subject: String,
     description: String,
     created: { type: Date, default: Date.now },

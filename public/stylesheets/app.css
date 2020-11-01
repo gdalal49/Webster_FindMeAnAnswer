@@ -12,3 +12,7 @@ img {
 .deleteForm{
   display: inline;
 }
+
+.well{
+  margin: 10px 0px;
+}

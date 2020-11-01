@@ -49,7 +49,7 @@ app.use(function (req, res, next) {
 
 //Landing Page
 app.get("/", function (req, res) {
-    res.redirect("/khojo");
+    res.render("landing");
 });
 
 //====================
@@ -93,7 +93,7 @@ app.post("/khojo", isLoggedIn, function (req, res) {
 
 //SHOW - Show Particular Question with All its detail - GET
 app.get("/khojo/:id", function (req, res) {
-    Question.findById(req.params.id).populate("comments").exec(function (err, foundQuestion) {
+    Question.findById(req.params.id).populate("answer").populate("comments").exec(function (err, foundQuestion) {
         if (err) {
             console.log(err);
         } else {
@@ -105,7 +105,7 @@ app.get("/khojo/:id", function (req, res) {
 //EDIT - Edit particular question - GET
 app.get("/khojo/:id/edit", checkQuestionOwnership, function (req, res) {
     Question.findById(req.params.id, function (err, foundQuestion) {
-        res.render("khojo/edit", { question: foundQuestion });
+        res.render("questions/edit", { question: foundQuestion });
     });
 });
 
@@ -217,7 +217,8 @@ app.get("/khojo/:id/answer/new", function (req, res) {
         }
     });
 });
-//CREATE - Creating a comment
+
+//CREATE - Creating an answer
 app.post("/khojo/:id/answer", isLoggedIn, function (req, res) {
     Question.findById(req.params.id, function (err, question) {
         if (err) {
@@ -239,6 +240,39 @@ app.post("/khojo/:id/answer", isLoggedIn, function (req, res) {
                     res.redirect('/khojo/' + question._id);
                 }
             });
+        }
+    });
+});
+
+//EDIT - Editing an answer - GET ROUTE
+app.get("/khojo/:id/answer/:answer_id/edit", function (req, res) {
+    Answer.findById(req.params.answer_id, function (err, foundAnswer) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.render("answer/edit", { question_id: req.params.id, answer: foundAnswer });
+        }
+    });
+});
+
+//UPDATE - Updating the answer - PUT ROUTE
+app.put("/khojo/:id/answer/:answer_id", function (req, res) {
+    Answer.findByIdAndUpdate(req.params.answer_id, req.body.answer, function (err, updatedAnswer) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.redirect("/khojo/" + req.params.id);
+        }
+    });
+});
+
+//DESTROY - Deleting the answer - DELETE ROUTE
+app.delete("/khojo/:id/answer/:answer_id", function (req, res) {
+    Answer.findByIdAndRemove(req.params.answer_id, function (err) {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.redirect("/khojo/" + req.params.id);
         }
     });
 });
