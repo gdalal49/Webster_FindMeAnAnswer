@@ -20,3 +20,8 @@ children, right? In comes KHOJO
 ![Screenshot_3](https://user-images.githubusercontent.com/54816974/147499063-b26f94c8-0006-48f4-b3d9-4db5d1c49108.jpg)
 4)Comments,UpVotes & DownVotes
 ![Screenshot_4](https://user-images.githubusercontent.com/54816974/147499069-aea4b82f-1376-42ac-a753-d1634b08b960.jpg)
+
+## Authors
+
+- [@Prabhjout](https://github.com/Prabhjout)
+- [@gdalal49](https://github.com/gdalal49)
